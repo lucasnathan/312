@@ -54,7 +54,7 @@ class Transfer extends Thread {
         int bytesRead = Packet.maxTftpPakLen;
 
         try {
-            for (int blkNum=0; bytesRead== Packet.maxTftpPakLen; blkNum++) {
+            for (int blkNum=0; bytesRead==Packet.maxTftpPakLen; blkNum++) {
 
                 Data outPak=new Data(blkNum,source);
                 bytesRead=outPak.getLength();

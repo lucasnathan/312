@@ -1,48 +1,82 @@
 package com.waikato;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * Created by lucas on 24/03/15.
  */
+
 public class Tftp {
-    
-    public static void main(String[] args){
-        if (isRequest(args[0])){
+
+    public static void main(String argv[]){
+        String host="";
+         /*if (isRequest(args[0])){
             System.out.println("passed");
         }else
-            System.out.println("File not found.");
+            System.out.println("File not found.");*/
         try {
-            DatagramSocket sock = new DatagramSocket(Packet.tftpPort);
-            System.out.println("Server Ready.  Port:  "+sock.getLocalPort());
 
-            // Listen for requests
+            // Process command line
 
-            while (1==1) {
-                Packet in= Packet.receive(sock);
+            if (argv.length==0)
+                throw new Exception("usage:  Tftp server[:port] file [ local-file ]");
 
-                // This server will only respond to RRQ
+            if (argv.length==1)
+                host="localhost";
+            else
+                host=argv[0];
 
-                if (in instanceof Read) {
-                    System.out.println("Request from "+in.getAddress());
-                    Transfer t = new Transfer((Read)in);
+            String fileName=argv[argv.length-1];
+
+            // Create socket and open output file
+
+            InetAddress server = InetAddress.getByName(host);
+            DatagramSocket sock = new DatagramSocket();
+
+            FileOutputStream outFile = new FileOutputStream("alomocada");
+
+            // Send request to server
+
+            Read reqPak = new Read(fileName);
+            reqPak.send(server,sock);
+
+            int pakLen= Packet.maxTftpPakLen;
+
+            // Process the transfer
+
+            for (int pakCount=0, bytesOut=512; bytesOut==512; pakCount++) {
+                Packet inPak = Packet.receive(sock);
+
+                if (inPak instanceof Error)  {
+                    Error p=(Error)inPak;
+                    throw new Exception(p.message());
                 }
-            }
-        }
-        catch(Exception e) { System.out.println("Server terminated"); }
-    }
-    public static boolean isRequest(String str){
+                else if (inPak instanceof Data) {
+                    Data p=(Data)inPak;
 
-        if(str.matches(".*[^a-zA-Z./\\s].*"))
-            return false;
-        if(str.matches("^/\\..*"))
-            return false;
-        if(str.matches("^\\..*"))
-            return false;
-        if(str.matches(".*/\\..*"))
-            return false;
-        if(str.matches(".*\\s\\..*"))
-            return false;
-        return true;
+                    int blockNum=p.blockNumber();
+                    bytesOut=p.write(outFile);
+
+                    Ack ack=new Ack(blockNum);
+                    ack.send(p.getAddress(),p.getPort(),sock);
+                }
+                else
+                    throw new Exception("Unexpected response from server");
+            }
+            outFile.close();
+            sock.close();
+        }
+        catch (IOException e) {
+            System.out.println("IO error, transfer aborted");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
 }

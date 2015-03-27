@@ -3,17 +3,16 @@ package com.waikato;
 /**
  * Created by lucas on 26/03/15.
  */
-public class Read extends Packet {
-
+public class Write extends Packet {
     static final String reqType = "octet";
 
-    protected Read() {}
+    protected Write() {}
 
-    public Read(String filename) {
-
+    public Write(String filename) {
         length=2+filename.length()+1+reqType.length()+1;
         message = new byte[length];
-        put(opOffset,tftpRRQ);
+
+        put(opOffset,tftpWRQ);
         put(fileOffset,filename,(byte)0);
         put(fileOffset+filename.length()+1,reqType,(byte)0);
     }
