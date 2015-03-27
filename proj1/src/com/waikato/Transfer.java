@@ -6,7 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 /**
- * Created by lucas on 26/03/15.
+ * Created by lucas on 24/03/15.
  */
 
 class Transfer extends Thread {

@@ -6,23 +6,23 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 /**
- * Created by lucas on 26/03/15.
+ * Created by lucas on 20/03/15.
  */
 public class Packet {
 
     // TFTP constants
 
-    public static int serverPort = 1024;
+    public int serverPort = 69;
     public static int maxTftpPakLen=516;
     public static int maxTftpData=512;
 
     // Tftpd opcodes (RFC 1350)
 
-    protected static final short tftpRRQ=1;
-    protected static final short tftpWRQ=2;
-    protected static final short tftpDATA=3;
-    protected static final short tftpACK=4;
-    protected static final short tftpERROR=5;
+    protected static final short RRQ =1;
+    protected static final short WRQ =2;
+    protected static final short DATA =3;
+    protected static final short ACK =4;
+    protected static final short ERROR =5;
 
     // Packet Offsets
 
@@ -41,7 +41,7 @@ public class Packet {
     protected int length;
     protected byte [] message;
 
-    // Address info (requried for replies)
+    // Reply Address
 
     protected InetAddress host;
     protected int port;
@@ -59,7 +59,7 @@ public class Packet {
 
         sock.receive(datagramPacket);
         switch (in.get(0)) {
-            case tftpRRQ:
+            case RRQ:
 
                 if (in.getMode().compareTo("octet")==0){
                     typePack=new Read();
@@ -69,24 +69,23 @@ public class Packet {
                     String e = "error code 2: Illegal TFTP operation";
                     typePack = new Error(4,e);
                 }
-
                 break;
-            case tftpWRQ:
+            case WRQ:
                 typePack=new Write();
                 typePack.message=in.message;
                 typePack.length=datagramPacket.getLength();
                 break;
-            case tftpDATA:
+            case DATA:
                 typePack=new Data();
                 typePack.message=in.message;
                 typePack.length=datagramPacket.getLength();
                 break;
-            case tftpACK:
+            case ACK:
                 typePack=new Ack();
                 typePack.message=in.message;
                 typePack.length=datagramPacket.getLength();
                 break;
-            case tftpERROR:
+            case ERROR:
                 typePack=new Error();
                 typePack.message=in.message;
                 typePack.length=datagramPacket.getLength();
@@ -105,8 +104,8 @@ public class Packet {
         sock.send(new DatagramPacket(message,length,ip, serverPort));
     }
 
-    public void send(InetAddress ip, int p, DatagramSocket s) throws IOException {
-        s.send(new DatagramPacket(message,length,ip,p));
+    public void send(InetAddress ip, int port, DatagramSocket s) throws IOException {
+        s.send(new DatagramPacket(message,length,ip,port));
     }
 
     // DatagramPacket like methods
@@ -164,5 +163,8 @@ public class Packet {
             i++;
         }
         return result.toString();
+    }
+    public static int defautPort(){
+        return 69;
     }
 }

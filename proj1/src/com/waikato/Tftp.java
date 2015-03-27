@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 /**
  * Created by lucas on 24/03/15.
@@ -14,68 +13,71 @@ import java.net.UnknownHostException;
 public class Tftp {
 
     public static void main(String argv[]){
-        String host="";
-         /*if (isRequest(args[0])){
-            System.out.println("passed");
-        }else
-            System.out.println("File not found.");*/
+        String hostName = "";
+        String localFile = "";
+        int port;
+
         try {
 
-            // Process command line
-
-            if (argv.length==0)
+            if (argv.length<2){
                 throw new Exception("usage:  Tftp server[:port] file [ local-file ]");
+            }
+            if (argv[0].contains(":")){
+                String[] serverName = argv[0].split(":");
+                hostName=serverName[0];
+                port = Integer.parseInt(serverName[1]);
+            }else {
+                hostName = argv[0];
+                port = Packet.defautPort();
+            }
+            String fileName=argv[1];
+            if (argv.length>2){
+                localFile = argv[2];
+            }else {
+                localFile = fileName;
+            }
 
-            if (argv.length==1)
-                host="localhost";
-            else
-                host=argv[0];
-
-            String fileName=argv[argv.length-1];
-
-            // Create socket and open output file
-
-            InetAddress server = InetAddress.getByName(host);
+            InetAddress server = InetAddress.getByName(hostName);
             DatagramSocket sock = new DatagramSocket();
+            FileOutputStream outFile = new FileOutputStream(localFile);
 
-            FileOutputStream outFile = new FileOutputStream("alomocada");
+            Read request = new Read(fileName);
+            request.setServerPort(port);
+            request.send(server, sock);
 
-            // Send request to server
+            int byteM =512;
+             do {
 
-            Read reqPak = new Read(fileName);
-            reqPak.send(server,sock);
+                Packet packReceived = Packet.receive(sock);
 
-            int pakLen= Packet.maxTftpPakLen;
-
-            // Process the transfer
-
-            for (int pakCount=0, bytesOut=512; bytesOut==512; pakCount++) {
-                Packet inPak = Packet.receive(sock);
-
-                if (inPak instanceof Error)  {
-                    Error p=(Error)inPak;
+                if (packReceived instanceof Error)  {
+                    Error p=(Error)packReceived;
                     throw new Exception(p.message());
                 }
-                else if (inPak instanceof Data) {
-                    Data p=(Data)inPak;
+                else if (packReceived instanceof Data) {
+                    Data p=(Data)packReceived;
 
                     int blockNum=p.blockNumber();
-                    bytesOut=p.write(outFile);
+                    byteM = p.write(outFile);
 
+                    //send Ack
                     Ack ack=new Ack(blockNum);
                     ack.send(p.getAddress(),p.getPort(),sock);
                 }
                 else
                     throw new Exception("Unexpected response from server");
-            }
+            }while(byteM==512);
             outFile.close();
             sock.close();
+            throw new Exception("transfer done");
         }
         catch (IOException e) {
-            System.out.println("IO error, transfer aborted");
+            System.out.println("transfer aborted");
+            System.exit(1);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
+            System.exit(1);
         }
     }
 

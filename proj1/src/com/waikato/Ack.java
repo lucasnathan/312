@@ -13,7 +13,7 @@ public class Ack extends Packet {
         length=4;
         this.message = new byte[length];
 
-        put(opOffset,tftpACK);
+        put(opOffset, ACK);
         put(blkOffset,(short)blockNumber);
     }
 

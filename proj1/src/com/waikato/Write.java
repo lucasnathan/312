@@ -1,7 +1,7 @@
 package com.waikato;
 
 /**
- * Created by lucas on 26/03/15.
+ * Created by lucas on 22/03/15.
  */
 public class Write extends Packet {
     static final String reqType = "octet";
@@ -12,7 +12,7 @@ public class Write extends Packet {
         length=2+filename.length()+1+reqType.length()+1;
         message = new byte[length];
 
-        put(opOffset,tftpWRQ);
+        put(opOffset, WRQ);
         put(fileOffset,filename,(byte)0);
         put(fileOffset+filename.length()+1,reqType,(byte)0);
     }

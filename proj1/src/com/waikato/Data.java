@@ -5,7 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
- * Created by lucas on 26/03/15.
+ * Created by lucas on 22/03/15.
  */
 public class Data extends Packet {
 
@@ -16,7 +16,7 @@ public class Data extends Packet {
     public Data(int blockNumber, FileInputStream in) throws IOException {
         this.message=new byte[maxTftpPakLen];
 
-        this.put(opOffset,tftpDATA);
+        this.put(opOffset, DATA);
         this.put(blkOffset,(short)blockNumber);
         length=in.read(message,dataOffset,maxTftpData)+4;
     }

@@ -1,7 +1,7 @@
 package com.waikato;
 
 /**
- * Created by lucas on 26/03/15.
+ * Created by lucas on 22/03/15.
  */
 public class Read extends Packet {
 
@@ -13,7 +13,7 @@ public class Read extends Packet {
 
         length=2+filename.length()+1+reqType.length()+1;
         message = new byte[length];
-        put(opOffset,tftpRRQ);
+        put(opOffset, RRQ);
         put(fileOffset,filename,(byte)0);
         put(fileOffset+filename.length()+1,reqType,(byte)0);
     }
